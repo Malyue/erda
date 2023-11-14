@@ -16,6 +16,10 @@ package pipeline
 
 import (
 	"context"
+	transhttp "github.com/erda-project/erda-infra/pkg/transport/http"
+	"github.com/erda-project/erda-infra/pkg/transport/http/encoding"
+	"github.com/erda-project/erda/pkg/i18n"
+	"net/http"
 	"reflect"
 
 	"github.com/erda-project/erda-infra/base/logs"
@@ -96,7 +100,20 @@ func (p *provider) Init(ctx servicehub.Context) error {
 		cancel:       p.Cancel,
 	}
 	if p.Register != nil {
-		pb.RegisterPipelineServiceImp(p.Register, p.pipelineService, apis.Options())
+		pb.RegisterPipelineServiceImp(p.Register, p.pipelineService, apis.Options(),
+			transport.WithHTTPOptions(
+				transhttp.WithDecoder(func(r *http.Request, data interface{}) error {
+					lang := r.URL.Query().Get("lang")
+					if lang != "" {
+						r.Header.Set("lang", lang)
+					}
+					locale := i18n.GetLocaleNameByRequest(r)
+					if locale != "" {
+						i18n.SetGoroutineBindLang(locale)
+					}
+					return encoding.DecodeRequest(r, data)
+				}),
+			))
 	}
 	return nil
 }
