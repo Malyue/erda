@@ -50,6 +50,18 @@ func (client *DBClient) GetAuditsByParam(param *apistructs.AuditsListRequest) (i
 	if param.UserID != nil {
 		db = db.Where("user_id in ( ? )", param.UserID)
 	}
+	if param.TemplateName != nil {
+		db = db.Where("template_name in ( ? )", param.TemplateName)
+	}
+	if param.ClientIP != "" {
+		db = db.Where("client_ip like %?%", param.ClientIP)
+	}
+	if param.ScopeType != nil {
+		db = db.Where("scope_type in ( ? )", param.ScopeType)
+	}
+	if param.ScopeID != nil {
+		db = db.Where("scope_id in ( ? )", param.ScopeID)
+	}
 
 	if param.FDPProjectID != "" {
 		db = db.Where("fdp_project_id = ?", param.FDPProjectID)

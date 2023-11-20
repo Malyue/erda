@@ -378,6 +378,14 @@ type AuditsListRequest struct {
 	FDPProjectID string `schema:"fdpProjectId"`
 	// +optional 通过用户id过滤事件
 	UserID []string `schema:"userId"`
+	// +optional 通过模板名称过滤事件
+	TemplateName []string `schema:"templateName"`
+	// +optional 通过组织类型 - org/project等
+	ScopeType []ScopeType `schema:"scopeType"`
+	// +optional 通过scope_id过滤
+	ScopeID []uint64 `schema:"scopeId"`
+	// +optional 通过客户端ip过滤 - 模糊查询
+	ClientIP string `schema:"clientIp"`
 	// default 1
 	PageNo int `schema:"pageNo"`
 	// default 20

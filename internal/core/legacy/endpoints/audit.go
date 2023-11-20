@@ -103,7 +103,6 @@ func (e *Endpoints) ListAudits(ctx context.Context, r *http.Request, vars map[st
 	if err := e.queryStringDecoder.Decode(&listReq, r.URL.Query()); err != nil {
 		return apierrors.ErrListAudit.InvalidParameter(err).ToResp(), nil
 	}
-
 	// 查询参数检查
 	if err := listReq.Check(); err != nil {
 		return apierrors.ErrListAudit.InvalidParameter(err).ToResp(), nil
