@@ -7,6 +7,7 @@ import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
+import "core/pipeline/source/source.proto";
 
 option go_package = "github.com/erda-project/erda-proto-go/dop/projectpipeline/pb";
 
@@ -217,6 +218,7 @@ message CreateProjectPipelineSourcePreCheckRequest {
 message CreateProjectPipelineSourcePreCheckResponse {
     bool pass = 1;
     string message = 2;
+    erda.core.pipeline.source.PipelineSource source = 3;
 }
 
 message CreateProjectPipelineNamePreCheckRequest {

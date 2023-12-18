@@ -21,10 +21,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	_time "github.com/erda-project/erda/pkg/time"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -150,6 +152,7 @@ func (s *ProjectPipelineService) GetPipelineYml(app *apistructs.ApplicationDTO, 
 }
 
 func (p *ProjectPipelineService) CreateSourcePreCheck(ctx context.Context, params *pb.CreateProjectPipelineSourcePreCheckRequest) (*pb.CreateProjectPipelineSourcePreCheckResponse, error) {
+	defer _time.TimeCost(time.Now(), p.logger, "CreateSourcePreCheck: ")
 	if err := params.Validate(); err != nil {
 		return nil, apierrors.ErrCreateProjectPipeline.InvalidParameter(err)
 	}
@@ -188,7 +191,8 @@ func (p *ProjectPipelineService) CreateSourcePreCheck(ctx context.Context, param
 
 	if len(definitionList.Data) == 0 {
 		return &pb.CreateProjectPipelineSourcePreCheckResponse{
-			Pass: true,
+			Pass:   true,
+			Source: resp.Data[0],
 		}, nil
 	}
 	definitionName := definitionList.Data[0].Name
@@ -221,6 +225,7 @@ func (p *ProjectPipelineService) CreateNamePreCheck(ctx context.Context, req *pb
 }
 
 func (p *ProjectPipelineService) Create(ctx context.Context, params *pb.CreateProjectPipelineRequest) (*pb.CreateProjectPipelineResponse, error) {
+	defer _time.TimeCost(time.Now(), p.logger, "Create: ")
 	if err := params.Validate(); err != nil {
 		return nil, apierrors.ErrCreateProjectPipeline.InvalidParameter(err)
 	}
@@ -317,6 +322,7 @@ func (p *ProjectPipelineService) CheckBranchRule(branch string, projectID int64)
 }
 
 func (p *ProjectPipelineService) CreateOne(ctx context.Context, params *pb.CreateProjectPipelineRequest) (*pb.ProjectPipeline, error) {
+	defer _time.TimeCost(time.Now(), p.logger, "CreateOne: ")
 	sourceCheckResult, err := p.CreateSourcePreCheck(ctx, &pb.CreateProjectPipelineSourcePreCheckRequest{
 		SourceType: params.SourceType,
 		Ref:        params.Ref,
@@ -331,15 +337,29 @@ func (p *ProjectPipelineService) CreateOne(ctx context.Context, params *pb.Creat
 		return nil, fmt.Errorf(sourceCheckResult.Message)
 	}
 
+	// if source is exist,ignore the logic of create source
 	pipelineSourceType := NewProjectSourceType(params.SourceType)
-	sourceReq, err := pipelineSourceType.GenerateReq(ctx, p, params)
-	if err != nil {
-		return nil, err
+
+	var sourceReq *spb.PipelineSourceCreateRequest
+	sourceRsp := &spb.PipelineSourceCreateResponse{
+		PipelineSource: sourceCheckResult.Source,
 	}
 
-	sourceRsp, err := p.PipelineSource.Create(ctx, sourceReq)
-	if err != nil {
-		return nil, err
+	if sourceRsp.PipelineSource == nil {
+		sourceReq, err = pipelineSourceType.GenerateReq(ctx, p, params)
+		if err != nil {
+			return nil, err
+		}
+
+		sourceRsp, err = p.PipelineSource.Create(ctx, sourceReq)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// if sourceReq is nil,set the sourceRsp.PipelineSource.PipelineYml in it
+	if sourceReq == nil {
+		sourceReq.PipelineYml = sourceRsp.PipelineSource.PipelineYml
 	}
 
 	location, err := p.makeLocationByAppID(params.AppID)
@@ -1627,6 +1647,7 @@ type pipelineNum struct {
 }
 
 func (p *ProjectPipelineService) checkRolePermission(identityInfo apistructs.IdentityInfo, createRequest *pipelinesvcpb.PipelineCreateRequestV2, apiError *errorresp.APIError) error {
+	defer _time.TimeCost(time.Now(), p.logger, "checkRolePermission: ")
 	appIDString := createRequest.Labels[apistructs.LabelAppID]
 	appID, err := strconv.ParseInt(appIDString, 10, 64)
 	if err != nil {
@@ -1709,6 +1730,7 @@ func (p *ProjectPipelineService) makeLocationByProjectID(projectID uint64) (stri
 }
 
 func (p *ProjectPipelineService) makeLocationByAppID(appID uint64) (string, error) {
+	defer _time.TimeCost(time.Now(), p.logger, "makeLocationByAppID: ")
 	app, err := p.bundle.GetApp(appID)
 	if err != nil {
 		return "", err

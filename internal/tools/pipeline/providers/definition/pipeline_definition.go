@@ -18,7 +18,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	_time "github.com/erda-project/erda/pkg/time"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -48,6 +50,7 @@ func GetExtraValue(definition *pb.PipelineDefinition) (*apistructs.PipelineDefin
 }
 
 func (p pipelineDefinition) Create(ctx context.Context, request *pb.PipelineDefinitionCreateRequest) (*pb.PipelineDefinitionCreateResponse, error) {
+	defer _time.TimeCost(time.Now(), nil, "pipeline_definition Create: ")
 	var pipelineDefinition db.PipelineDefinition
 
 	definitionInDB, has, err := p.dbClient.GetPipelineDefinitionBySourceID(request.PipelineSourceID)
@@ -223,6 +226,7 @@ func (p pipelineDefinition) Get(ctx context.Context, request *pb.PipelineDefinit
 }
 
 func (p pipelineDefinition) List(ctx context.Context, request *pb.PipelineDefinitionListRequest) (*pb.PipelineDefinitionListResponse, error) {
+	defer _time.TimeCost(time.Now(), nil, "List Definition: ")
 	definitions, total, err := p.dbClient.ListPipelineDefinition(request)
 	if err != nil {
 		return nil, err

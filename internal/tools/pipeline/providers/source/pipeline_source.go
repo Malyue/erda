@@ -17,6 +17,7 @@ package source
 import (
 	"context"
 	"fmt"
+	_time "github.com/erda-project/erda/pkg/time"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -31,6 +32,7 @@ type pipelineSource struct {
 }
 
 func (p pipelineSource) Create(ctx context.Context, request *pb.PipelineSourceCreateRequest) (*pb.PipelineSourceCreateResponse, error) {
+	defer _time.TimeCost(time.Now(), nil, "Pipeline_Source Create: ")
 	unique := &db.PipelineSourceUnique{
 		SourceType:  request.SourceType,
 		Remote:      request.Remote,
@@ -149,6 +151,7 @@ func (p pipelineSource) Get(ctx context.Context, request *pb.PipelineSourceGetRe
 }
 
 func (p pipelineSource) List(ctx context.Context, request *pb.PipelineSourceListRequest) (*pb.PipelineSourceListResponse, error) {
+	defer _time.TimeCost(time.Now(), nil, "List Source: ")
 	unique := &db.PipelineSourceUnique{
 		SourceType: request.SourceType,
 		Remote:     request.Remote,

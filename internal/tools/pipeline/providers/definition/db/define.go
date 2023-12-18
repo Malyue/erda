@@ -16,6 +16,7 @@ package db
 
 import (
 	"fmt"
+	_time "github.com/erda-project/erda/pkg/time"
 	"path/filepath"
 	"time"
 
@@ -145,6 +146,7 @@ type PipelineDefinitionSource struct {
 }
 
 func (client *Client) ListPipelineDefinition(req *pb.PipelineDefinitionListRequest, ops ...mysqlxorm.SessionOption) ([]PipelineDefinitionSource, int64, error) {
+	defer _time.TimeCost(time.Now(), nil, "List Pipeline Definition db: ")
 	session := client.NewSession(ops...)
 	defer session.Close()
 

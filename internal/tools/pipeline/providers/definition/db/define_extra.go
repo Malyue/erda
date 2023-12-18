@@ -15,6 +15,7 @@
 package db
 
 import (
+	_time "github.com/erda-project/erda/pkg/time"
 	"time"
 
 	"github.com/erda-project/erda-infra/providers/mysqlxorm"
@@ -118,6 +119,7 @@ func (client *Client) ListPipelineDefinitionExtra(idList []string, ops ...mysqlx
 }
 
 func (client *Client) ListPipelineDefinitionExtraByDefinitionIDList(definitionIDList []string, ops ...mysqlxorm.SessionOption) ([]PipelineDefinitionExtra, error) {
+	defer _time.TimeCost(time.Now(), nil, "List Definition Extra: ")
 	session := client.NewSession(ops...)
 	defer session.Close()
 

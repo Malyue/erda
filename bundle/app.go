@@ -16,9 +16,11 @@ package bundle
 
 import (
 	"fmt"
+	_time "github.com/erda-project/erda/pkg/time"
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -30,6 +32,7 @@ import (
 
 // GetApp get app by id from core-service.
 func (b *Bundle) GetApp(id uint64) (*apistructs.ApplicationDTO, error) {
+	defer _time.TimeCost(time.Now(), nil, "GetApp: ")
 	host, err := b.urls.ErdaServer()
 	if err != nil {
 		return nil, err
