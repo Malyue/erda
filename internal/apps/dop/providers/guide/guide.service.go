@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	_time "github.com/erda-project/erda/pkg/time"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -155,6 +156,7 @@ func (g *GuideService) ListGuide(ctx context.Context, req *pb.ListGuideRequest) 
 }
 
 func (g *GuideService) ProcessGuide(ctx context.Context, req *pb.ProcessGuideRequest) (*pb.ProcessGuideResponse, error) {
+	defer _time.TimeCost(time.Now(), nil, "ProcessGuide")
 	if err := req.Validate(); err != nil {
 		return nil, apierrors.ErrProcessGuide.InvalidParameter(err)
 	}

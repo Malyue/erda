@@ -345,6 +345,8 @@ func (p *ProjectPipelineService) CreateOne(ctx context.Context, params *pb.Creat
 		PipelineSource: sourceCheckResult.Source,
 	}
 
+	// if source is not exist,create source
+	// slow-path
 	if sourceRsp.PipelineSource == nil {
 		sourceReq, err = pipelineSourceType.GenerateReq(ctx, p, params)
 		if err != nil {
@@ -357,9 +359,15 @@ func (p *ProjectPipelineService) CreateOne(ctx context.Context, params *pb.Creat
 		}
 	}
 
-	// if sourceReq is nil,set the sourceRsp.PipelineSource.PipelineYml in it
+	// if sourceReq is nil,it means that source is exist,set the sourceRsp.PipelineSource.PipelineYml in it and generate the pipelineSourceType.CreateRequestV2
+	// fast-path
 	if sourceReq == nil {
-		sourceReq.PipelineYml = sourceRsp.PipelineSource.PipelineYml
+		sourceReq = &spb.PipelineSourceCreateRequest{
+			PipelineYml: sourceRsp.PipelineSource.PipelineYml,
+		}
+		if _, err = pipelineSourceType.GeneratePipelineCreateRequestV2(ctx, p, params); err != nil {
+			return nil, err
+		}
 	}
 
 	location, err := p.makeLocationByAppID(params.AppID)
@@ -472,6 +480,7 @@ func makePipelineName(params *pb.CreateProjectPipelineRequest, pipelineYml strin
 }
 
 func (p *ProjectPipelineService) createCronIfNotExist(definition *dpb.PipelineDefinition, projectPipelineType ProjectSourceType) error {
+	defer _time.TimeCost(time.Now(), p.logger, "createCronIfNotExist")
 	extraString := projectPipelineType.GetPipelineCreateRequestV2()
 	var extra apistructs.PipelineDefinitionExtraValue
 	err := json.Unmarshal([]byte(extraString), &extra)

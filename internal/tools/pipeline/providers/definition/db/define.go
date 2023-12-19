@@ -55,6 +55,7 @@ func (PipelineDefinition) TableName() string {
 }
 
 func (client *Client) CreatePipelineDefinition(pipelineDefinition *PipelineDefinition, ops ...mysqlxorm.SessionOption) (err error) {
+	defer _time.TimeCost(time.Now(), nil, "Create Definition db")
 	session := client.NewSession(ops...)
 	defer session.Close()
 
@@ -120,6 +121,7 @@ func (client *Client) GetPipelineDefinition(id string, ops ...mysqlxorm.SessionO
 }
 
 func (client *Client) GetPipelineDefinitionBySourceID(sourceID string, ops ...mysqlxorm.SessionOption) (*PipelineDefinition, bool, error) {
+	defer _time.TimeCost(time.Now(), nil, "Get Definition db")
 	session := client.NewSession(ops...)
 	defer session.Close()
 
